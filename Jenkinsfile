@@ -7,9 +7,6 @@ pipeline {
 
     stages {
         stage('PR Validation') {
-            when {
-                changeRequest()
-            }
             steps {
                 sh "sf update"
             }
