@@ -9,22 +9,24 @@ pipeline {
     stages {
         stage('JWT Auth + Validate') {
             steps {
-                sh '''
-                    echo "Authenticating with JWT..."
+                withCredentials([
+                    file(credentialsId: 'daf749e2-30e8-47e3-a05e-bf783b15bf17', variable: 'JWT_KEY')
+                ]) {
+                    sh '''
+                        echo "JWT key path: $JWT_KEY"
 
-                    sf org login jwt \
-                      --client-id 3MVG9WVXk15qiz1K3Y5R4DxeUnb6CffFsw3P4BalbXFFkJee78lnpHbRi4xMWnoCte4BGX9_ggFfhxXMjBtd5 \
-                      --jwt-key-file server.key \
-                      --username saikrishna.e06d4503945f@agentforce.com \
-                      --instance-url https://login.salesforce.com \
-                      --alias TestOrg
+                        sf org login jwt \
+                          --client-id 3MVG9WVXk15qiz1K3Y5R4DxeUnb6CffFsw3P4BalbXFFkJee78lnpHbRi4xMWnoCte4BGX9_ggFfhxXMjBtd5 \
+                          --jwt-key-file $JWT_KEY \
+                          --username saikrishna.e06d4503945f@agentforce.com \
+                          --instance-url https://login.salesforce.com \
+                          --alias TestOrg
 
-                    echo "Running validation..."
-
-                    sf project deploy validate \
-                      --manifest package.xml \
-                      --target-org TestOrg
-                '''
+                        sf project deploy validate \
+                          --manifest package.xml \
+                          --target-org TestOrg
+                    '''
+                }
             }
         }
     }
