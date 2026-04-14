@@ -15,7 +15,8 @@ pipeline {
                     sf org login jwt \
                       --client-id 3MVG9WVXk15qiz1K3Y5R4DxeUnb6CffFsw3P4BalbXFFkJee78lnpHbRi4xMWnoCte4BGX9_ggFfhxXMjBtd5 \
                       --jwt-key-file server.key \
-                      --username your-username@example.com \
+                      --username saikrishna.e06d4503945f@agentforce.com \
+                      --instance-url https://login.salesforce.com \
                       --alias TestOrg
 
                     echo "Running validation..."
