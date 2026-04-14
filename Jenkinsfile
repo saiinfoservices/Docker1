@@ -10,15 +10,17 @@ pipeline {
         stage('JWT Auth + Validate') {
             steps {
                 withCredentials([
+                    string(credentialsId: 'Consumer_Key', variable: 'SF_CLIENT_ID'),
+                    string(credentialsId: 'SFUsername', variable: 'SF_USERNAME'),
                     file(credentialsId: 'daf749e2-30e8-47e3-a05e-bf783b15bf17', variable: 'JWT_KEY')
                 ]) {
                     sh '''
-                        echo "JWT key path: $JWT_KEY"
+                        echo "Using JWT key at: $JWT_KEY"
 
                         sf org login jwt \
-                          --client-id 3MVG9WVXk15qiz1K3Y5R4DxeUnb6CffFsw3P4BalbXFFkJee78lnpHbRi4xMWnoCte4BGX9_ggFfhxXMjBtd5 \
+                          --client-id $SF_CLIENT_ID \
                           --jwt-key-file $JWT_KEY \
-                          --username saikrishna.e06d4503945f@agentforce.com \
+                          --username $SF_USERNAME \
                           --instance-url https://login.salesforce.com \
                           --alias TestOrg
 
