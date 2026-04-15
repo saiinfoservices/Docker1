@@ -37,7 +37,7 @@ pipeline {
         }
 
         // -------------------------------
-        // Stage 2: Run PMD Scan
+        // Stage 2: Run PMD Analysis
         // -------------------------------
         stage('Run PMD Analysis') {
             steps {
@@ -54,17 +54,28 @@ pipeline {
                     ./pmd-bin-7.0.0/bin/pmd check \
                       -d force-app \
                       -R category/apex/design.xml \
-                      -f xml \
-                      -r pmd-report.xml
+                      -f html \
+                      -r pmd-report.html || true
                 '''
             }
         }
     }
 
+    // -------------------------------
+    // Post: Publish HTML Report
+    // -------------------------------
     post {
         always {
-            echo "Archiving PMD report..."
-            archiveArtifacts artifacts: 'pmd-report.xml', allowEmptyArchive: true
+            echo "Publishing PMD HTML report..."
+
+            publishHTML([
+                reportDir: '.',
+                reportFiles: 'pmd-report.html',
+                reportName: 'PMD Code Analysis Report',
+                keepAll: true,
+                alwaysLinkToLastBuild: true,
+                allowMissing: true
+            ])
         }
 
         success {
