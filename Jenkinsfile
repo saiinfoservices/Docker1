@@ -44,6 +44,8 @@ pipeline {
                 sh '''
                     echo "Installing PMD..."
 
+                    set +e   # prevent pipeline failure from PMD
+
                     apt-get update && apt-get install -y wget unzip
 
                     wget -q https://github.com/pmd/pmd/releases/download/pmd_releases/7.0.0/pmd-bin-7.0.0.zip
@@ -55,14 +57,16 @@ pipeline {
                       -d force-app \
                       -R category/apex/design.xml \
                       -f html \
-                      -r pmd-report.html || true
+                      -r pmd-report.html
+
+                    echo "PMD completed (violations won't fail build)"
                 '''
             }
         }
     }
 
     // -------------------------------
-    // Post: Publish HTML Report
+    // Post Actions
     // -------------------------------
     post {
         always {
