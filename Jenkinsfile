@@ -23,8 +23,6 @@ pipeline {
                     file(credentialsId: 'daf749e2-30e8-47e3-a05e-bf783b15bf17', variable: 'JWT_KEY')
                 ]) {
                     sh '''
-                        echo "Authenticating with JWT..."
-
                         sf org login jwt \
                           --client-id $SF_CLIENT_ID \
                           --jwt-key-file $JWT_KEY \
@@ -49,37 +47,39 @@ pipeline {
         }
 
         // -------------------------------
-        // Stage 3: Run Code Analysis
+        // Stage 3: Run Code Analysis (HTML)
         // -------------------------------
-          stage('Run Code Analysis on Temptest.cls') {
+        stage('Run Code Analysis (HTML Output)') {
             steps {
                 sh '''
                     set +e
 
-                    echo "Running scanner on Temptest.cls..."
+                    echo "Running scanner with HTML output..."
 
                     sf scanner run \
-                      --engine "pmd" \
-                      --target "Temptest.cls" \
-                      --format "xml" \
-                      --outfile "pmd-report.html"
+                      --engine pmd \
+                      --target Temptest.cls \
+                      --format html \
+                      --outfile pmd-report.html
 
-                    echo "Preview output:"
-                    cat pmd-report.html || echo "No results generated"
+                    echo "Generated files:"
+                    ls -l
+
+                    echo "Preview (first lines of HTML):"
+                    head -20 pmd-report.html || echo "HTML not generated"
                 '''
             }
         }
     }
-    
 
     // -------------------------------
-    // Post Actions (NO PLUGIN USED)
+    // Post Actions
     // -------------------------------
     post {
         always {
-            echo "Saving PMD report as artifact..."
+            echo "Archiving HTML report..."
 
-        archiveArtifacts artifacts: 'pmd-report.html', allowEmptyArchive: true
+            archiveArtifacts artifacts: 'pmd-report.html', allowEmptyArchive: true
         }
 
         success {
