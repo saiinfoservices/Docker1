@@ -23,8 +23,6 @@ pipeline {
                     file(credentialsId: 'daf749e2-30e8-47e3-a05e-bf783b15bf17', variable: 'JWT_KEY')
                 ]) {
                     sh '''
-                        echo "Authenticating with JWT..."
-
                         sf org login jwt \
                           --client-id $SF_CLIENT_ID \
                           --jwt-key-file $JWT_KEY \
@@ -37,69 +35,49 @@ pipeline {
         }
 
         // -------------------------------
-        // Stage 2: Run PMD on Temptest.cls
+        // Stage 2: Install Code Analyzer
         // -------------------------------
-stage('Run PMD on Temptest.cls') {
-    steps {
-        sh '''
-            set +e
+        stage('Install Code Analyzer') {
+            steps {
+                sh '''
+                    echo "Installing Salesforce Code Analyzer..."
+                    sf plugins install @salesforce/sfdx-scanner
+                '''
+            }
+        }
 
-            echo "Current directory:"
-            pwd
+        // -------------------------------
+        // Stage 3: Run Static Code Analysis
+        // -------------------------------
+        stage('Run Code Analysis on Temptest.cls') {
+            steps {
+                sh '''
+                    echo "Running Code Analyzer on Temptest.cls..."
 
-            echo "Files in workspace:"
-            find . -name "*.cls"
+                    sf scanner run \
+                      --engine "pmd" \
+                      --target "Temptest.cls" \
+                      --format "xml" \
+                      --outfile "pmd-results.xml" || true
 
-            apt-get update && apt-get install -y wget unzip curl
-
-            echo "Downloading PMD..."
-
-            curl -L -o pmd.zip https://github.com/pmd/pmd/releases/download/pmd_releases/7.0.0/pmd-bin-7.0.0.zip
-
-            echo "Checking download:"
-            ls -l pmd.zip
-
-            echo "Unzipping PMD..."
-            unzip pmd.zip
-
-            echo "Listing extracted files:"
-            ls -l
-
-            PMD_DIR=$(ls -d pmd-bin-*/)
-
-            echo "PMD Directory: $PMD_DIR"
-
-            echo "Running PMD..."
-
-            $PMD_DIR/bin/pmd check \
-              -d . \
-              -R category/apex \
-              --include-pattern ".*Temptest.cls" \
-              -f html \
-              -r pmd-report.html
-
-            echo "PMD Report Preview:"
-            cat pmd-report.html || echo "Report not generated"
-        '''
+                    echo "Preview Results:"
+                    cat pmd-results.xml || echo "No results generated"
+                '''
+            }
+        }
     }
- }
-}
 
     // -------------------------------
     // Post Actions
     // -------------------------------
     post {
         always {
-            echo "Publishing PMD HTML report..."
+            echo "Publishing PMD Results in Jenkins..."
 
-            publishHTML([
-                reportDir: '.',
-                reportFiles: 'pmd-report.html',
-                reportName: 'PMD Code Analysis Report',
-                keepAll: true,
-                alwaysLinkToLastBuild: true,
-                allowMissing: true
-            ])
+            recordIssues(
+                enabledForFailure: true,
+                tool: pmdParser(pattern: 'pmd-results.xml')
+            )
         }
 
         success {
