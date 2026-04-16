@@ -62,10 +62,10 @@ pipeline {
                       --engine "pmd" \
                       --target "Temptest.cls" \
                       --format "xml" \
-                      --outfile "pmd-results.xml"
+                      --outfile "pmd-report.html"
 
                     echo "Preview output:"
-                    cat pmd-results.xml || echo "No results generated"
+                    cat pmd-report.html || echo "No results generated"
                 '''
             }
         }
