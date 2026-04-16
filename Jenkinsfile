@@ -79,7 +79,7 @@ pipeline {
         always {
             echo "Saving PMD report as artifact..."
 
-            archiveArtifacts artifacts: 'pmd-results.xml', allowEmptyArchive: true
+        archiveArtifacts artifacts: 'pmd-report.html', allowEmptyArchive: true
         }
 
         success {
