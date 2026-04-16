@@ -39,31 +39,38 @@ pipeline {
         // -------------------------------
         // Stage 2: Run PMD Analysis (Single File)
         // -------------------------------
-        stage('Run PMD on Temptest.cls') {
-            steps {
-                sh '''
-                    echo "Installing PMD..."
+stage('Run PMD on Temptest.cls') {
+    steps {
+        sh '''
+            set +e
 
-                    set +e   # prevent pipeline failure from PMD
+            echo "Current directory:"
+            pwd
 
-                    apt-get update && apt-get install -y wget unzip
+            echo "Files in workspace:"
+            ls -l
 
-                    wget -q https://github.com/pmd/pmd/releases/download/pmd_releases/7.0.0/pmd-bin-7.0.0.zip
-                    unzip -q pmd-bin-7.0.0.zip
+            echo "Checking Temptest.cls:"
+            cat Temptest.cls || echo "File not found!"
 
-                    echo "Running PMD scan on Temptest.cls..."
+            apt-get update && apt-get install -y wget unzip
 
-                    ./pmd-bin-7.0.0/bin/pmd check \
-                      -d Temptest.cls \
-                      -R category/apex/design.xml \
-                      -f html \
-                      -r pmd-report.html
+            wget -q https://github.com/pmd/pmd/releases/download/pmd_releases/7.0.0/pmd-bin-7.0.0.zip
+            unzip -q pmd-bin-7.0.0.zip
 
-                    echo "PMD completed (violations won't fail build)"
-                '''
-            }
-        }
+            echo "Running PMD..."
+
+            ./pmd-bin-7.0.0/bin/pmd check \
+              -d $(pwd)/Temptest.cls \
+              -R category/apex/design.xml \
+              -f html \
+              -r pmd-report.html
+
+            echo "PMD output preview:"
+            cat pmd-report.html || echo "No report generated"
+        '''
     }
+}
 
     // -------------------------------
     // Post Actions
