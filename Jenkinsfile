@@ -23,8 +23,6 @@ pipeline {
                     file(credentialsId: 'daf749e2-30e8-47e3-a05e-bf783b15bf17', variable: 'JWT_KEY')
                 ]) {
                     sh '''
-                        echo "Authenticating with JWT..."
-
                         sf org login jwt \
                           --client-id $SF_CLIENT_ID \
                           --jwt-key-file $JWT_KEY \
@@ -41,26 +39,56 @@ pipeline {
         // -------------------------------
         stage('Install Code Analyzer') {
             steps {
+                sh 'sf plugins install @salesforce/sfdx-scanner'
+            }
+        }
+
+        // -------------------------------
+        // Stage 3: Extract Apex Classes
+        // -------------------------------
+        stage('Extract Apex Classes') {
+            steps {
                 sh '''
-                    echo "Installing Salesforce Code Analyzer..."
-                    sf plugins install @salesforce/sfdx-scanner
+                    echo "Extracting Apex classes from package.xml..."
+
+                    apt-get update && apt-get install -y libxml2-utils
+
+                    # Extract only ApexClass members
+                    xmllint --xpath "//types[name='ApexClass']/members/text()" package.xml 2>/dev/null > raw.txt || true
+
+                    echo "Raw members:"
+                    cat raw.txt
+
+                    # Convert space-separated → newline → add .cls
+                    tr ' ' '\\n' < raw.txt | sed '/^$/d' | sed 's/$/.cls/' > class-files.txt
+
+                    echo "Final class files:"
+                    cat class-files.txt
                 '''
             }
         }
 
         // -------------------------------
-        // Stage 3: Run Code Analysis (TABLE OUTPUT)
+        // Stage 4: Run PMD (Filtered)
         // -------------------------------
-        stage('Run Code Analysis (Console Table)') {
+        stage('Run Code Analysis (Filtered)') {
             steps {
                 sh '''
                     set +e
 
-                    echo "Running scanner (TABLE output)..."
+                    if [ ! -s class-files.txt ]; then
+                        echo "No Apex classes found in package.xml. Skipping scan."
+                        exit 0
+                    fi
+
+                    FILES=$(paste -sd "," class-files.txt)
+
+                    echo "Files to scan:"
+                    echo $FILES
 
                     sf scanner run \
                       --engine pmd \
-                      --target Temptest.cls \
+                      --target "$FILES" \
                       --format table
 
                     echo "Scan completed"
@@ -69,14 +97,10 @@ pipeline {
         }
     }
 
-    // -------------------------------
-    // Post Actions
-    // -------------------------------
     post {
         success {
             echo "✅ Pipeline completed successfully"
         }
-
         failure {
             echo "❌ Pipeline failed"
         }
