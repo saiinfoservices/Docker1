@@ -23,6 +23,8 @@ pipeline {
                     file(credentialsId: 'daf749e2-30e8-47e3-a05e-bf783b15bf17', variable: 'JWT_KEY')
                 ]) {
                     sh '''
+                        echo "Authenticating with JWT..."
+
                         sf org login jwt \
                           --client-id $SF_CLIENT_ID \
                           --jwt-key-file $JWT_KEY \
@@ -47,20 +49,22 @@ pipeline {
         }
 
         // -------------------------------
-        // Stage 3: Run Static Code Analysis
+        // Stage 3: Run Code Analysis
         // -------------------------------
         stage('Run Code Analysis on Temptest.cls') {
             steps {
                 sh '''
-                    echo "Running Code Analyzer on Temptest.cls..."
+                    set +e
+
+                    echo "Running scanner on Temptest.cls..."
 
                     sf scanner run \
                       --engine "pmd" \
                       --target "Temptest.cls" \
                       --format "xml" \
-                      --outfile "pmd-results.xml" || true
+                      --outfile "pmd-results.xml"
 
-                    echo "Preview Results:"
+                    echo "Preview output:"
                     cat pmd-results.xml || echo "No results generated"
                 '''
             }
@@ -68,16 +72,13 @@ pipeline {
     }
 
     // -------------------------------
-    // Post Actions
+    // Post Actions (NO PLUGIN USED)
     // -------------------------------
     post {
         always {
-            echo "Publishing PMD Results in Jenkins..."
+            echo "Saving PMD report as artifact..."
 
-            recordIssues(
-                enabledForFailure: true,
-                tool: pmdParser(pattern: 'pmd-results.xml')
-            )
+            archiveArtifacts artifacts: 'pmd-results.xml', allowEmptyArchive: true
         }
 
         success {
