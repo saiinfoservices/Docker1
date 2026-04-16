@@ -39,7 +39,7 @@ pipeline {
         // -------------------------------
         // Stage 2: Run PMD on Temptest.cls
         // -------------------------------
- stage('Run PMD on Temptest.cls') {
+stage('Run PMD on Temptest.cls') {
     steps {
         sh '''
             set +e
@@ -50,12 +50,17 @@ pipeline {
             echo "Files in workspace:"
             find . -name "*.cls"
 
-            apt-get update && apt-get install -y wget unzip
+            apt-get update && apt-get install -y wget unzip curl
 
-            wget -q https://github.com/pmd/pmd/releases/download/pmd_releases/7.0.0/pmd-bin-7.0.0.zip
+            echo "Downloading PMD..."
+
+            curl -L -o pmd.zip https://github.com/pmd/pmd/releases/download/pmd_releases/7.0.0/pmd-bin-7.0.0.zip
+
+            echo "Checking download:"
+            ls -l pmd.zip
 
             echo "Unzipping PMD..."
-            unzip pmd-bin-7.0.0.zip
+            unzip pmd.zip
 
             echo "Listing extracted files:"
             ls -l
@@ -77,7 +82,6 @@ pipeline {
             cat pmd-report.html || echo "Report not generated"
         '''
     }
-}
 }
 
     // -------------------------------
