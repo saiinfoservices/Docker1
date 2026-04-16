@@ -23,6 +23,8 @@ pipeline {
                     file(credentialsId: 'daf749e2-30e8-47e3-a05e-bf783b15bf17', variable: 'JWT_KEY')
                 ]) {
                     sh '''
+                        echo "Authenticating with JWT..."
+
                         sf org login jwt \
                           --client-id $SF_CLIENT_ID \
                           --jwt-key-file $JWT_KEY \
@@ -47,26 +49,21 @@ pipeline {
         }
 
         // -------------------------------
-        // Stage 3: Run Code Analysis (HTML)
+        // Stage 3: Run Code Analysis (TABLE OUTPUT)
         // -------------------------------
-        stage('Run Code Analysis (HTML Output)') {
+        stage('Run Code Analysis (Console Table)') {
             steps {
                 sh '''
                     set +e
 
-                    echo "Running scanner with HTML output..."
+                    echo "Running scanner (TABLE output)..."
 
                     sf scanner run \
                       --engine pmd \
                       --target Temptest.cls \
-                      --format html \
-                      --outfile pmd-report.html
+                      --format table
 
-                    echo "Generated files:"
-                    ls -l
-
-                    echo "Preview (first lines of HTML):"
-                    head -20 pmd-report.html || echo "HTML not generated"
+                    echo "Scan completed"
                 '''
             }
         }
@@ -76,12 +73,6 @@ pipeline {
     // Post Actions
     // -------------------------------
     post {
-        always {
-            echo "Archiving HTML report..."
-
-            archiveArtifacts artifacts: 'pmd-report.html', allowEmptyArchive: true
-        }
-
         success {
             echo "✅ Pipeline completed successfully"
         }
