@@ -82,6 +82,7 @@ stage('Run PMD on Temptest.cls') {
             cat pmd-report.html || echo "Report not generated"
         '''
     }
+ }
 }
 
     // -------------------------------
