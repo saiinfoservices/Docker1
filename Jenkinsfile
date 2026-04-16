@@ -39,7 +39,7 @@ pipeline {
         // -------------------------------
         // Stage 2: Run PMD on Temptest.cls
         // -------------------------------
-       stage('Run PMD on Temptest.cls') {
+ stage('Run PMD on Temptest.cls') {
     steps {
         sh '''
             set +e
@@ -53,11 +53,20 @@ pipeline {
             apt-get update && apt-get install -y wget unzip
 
             wget -q https://github.com/pmd/pmd/releases/download/pmd_releases/7.0.0/pmd-bin-7.0.0.zip
-            unzip -q pmd-bin-7.0.0.zip
+
+            echo "Unzipping PMD..."
+            unzip pmd-bin-7.0.0.zip
+
+            echo "Listing extracted files:"
+            ls -l
+
+            PMD_DIR=$(ls -d pmd-bin-*/)
+
+            echo "PMD Directory: $PMD_DIR"
 
             echo "Running PMD..."
 
-            ./pmd-bin-7.0.0/bin/pmd check \
+            $PMD_DIR/bin/pmd check \
               -d . \
               -R category/apex \
               --include-pattern ".*Temptest.cls" \
@@ -65,10 +74,10 @@ pipeline {
               -r pmd-report.html
 
             echo "PMD Report Preview:"
-            cat pmd-report.html
+            cat pmd-report.html || echo "Report not generated"
         '''
     }
- }
+}
 }
 
     // -------------------------------
