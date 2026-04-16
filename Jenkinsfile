@@ -39,42 +39,36 @@ pipeline {
         // -------------------------------
         // Stage 2: Run PMD on Temptest.cls
         // -------------------------------
-        stage('Run PMD on Temptest.cls') {
-            steps {
-                sh '''
-                    set +e
+       stage('Run PMD on Temptest.cls') {
+    steps {
+        sh '''
+            set +e
 
-                    echo "Current directory:"
-                    pwd
+            echo "Current directory:"
+            pwd
 
-                    echo "Workspace files:"
-                    ls -l
+            echo "Files in workspace:"
+            find . -name "*.cls"
 
-                    echo "Checking Temptest.cls:"
-                    cat Temptest.cls || echo "Temptest.cls NOT FOUND"
+            apt-get update && apt-get install -y wget unzip
 
-                    echo "Installing PMD..."
-                    apt-get update && apt-get install -y wget unzip
+            wget -q https://github.com/pmd/pmd/releases/download/pmd_releases/7.0.0/pmd-bin-7.0.0.zip
+            unzip -q pmd-bin-7.0.0.zip
 
-                    wget -q https://github.com/pmd/pmd/releases/download/pmd_releases/7.0.0/pmd-bin-7.0.0.zip
-                    unzip -q pmd-bin-7.0.0.zip
+            echo "Running PMD..."
 
-                    echo "Running PMD scan..."
+            ./pmd-bin-7.0.0/bin/pmd check \
+              -d . \
+              -R category/apex \
+              --include-pattern ".*Temptest.cls" \
+              -f html \
+              -r pmd-report.html
 
-                    ./pmd-bin-7.0.0/bin/pmd check \
-                      -d $(pwd)/Temptest.cls \
-                      -R category/apex/bestpractices.xml,category/apex/performance.xml \
-                      -f html \
-                      -r pmd-report.html
-
-                    echo "PMD scan completed"
-
-                    echo "Preview report:"
-                    cat pmd-report.html || echo "No report generated"
-                '''
-            }
-        }
+            echo "PMD Report Preview:"
+            cat pmd-report.html
+        '''
     }
+}
 
     // -------------------------------
     // Post Actions
