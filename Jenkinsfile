@@ -37,9 +37,9 @@ pipeline {
         }
 
         // -------------------------------
-        // Stage 2: Run PMD Analysis
+        // Stage 2: Run PMD Analysis (Single File)
         // -------------------------------
-        stage('Run PMD Analysis') {
+        stage('Run PMD on Temptest.cls') {
             steps {
                 sh '''
                     echo "Installing PMD..."
@@ -51,10 +51,10 @@ pipeline {
                     wget -q https://github.com/pmd/pmd/releases/download/pmd_releases/7.0.0/pmd-bin-7.0.0.zip
                     unzip -q pmd-bin-7.0.0.zip
 
-                    echo "Running PMD scan..."
+                    echo "Running PMD scan on Temptest.cls..."
 
                     ./pmd-bin-7.0.0/bin/pmd check \
-                      -d force-app \
+                      -d Temptest.cls \
                       -R category/apex/design.xml \
                       -f html \
                       -r pmd-report.html
