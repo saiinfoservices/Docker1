@@ -1,5 +1,13 @@
-<members>Temptest</members>
-<name>ApexClass</name>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>Temptest</members>
+        <name>ApexClass</name>
+    </types>
 
-<members>ABC</members>
-<name>Flow</name>
+    <types>
+        <members>ABC</members>
+        <name>Flow</name>
+    </types>
+
+    <version>59.0</version>
+</Package>
